@@ -2,13 +2,16 @@
 using DeribitApiClient.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace DeribitApiClient
 {
-    internal class Program
+    public class Program
     {
-        static void Main(string[] args)
+
+        public void Main(string[] args)
         {
+            Console.WriteLine("exited gracefully");
             HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
             builder.Services.AddHostedService<DeribitWebsocketHost>();
             builder.Services.AddSingleton<IDeribitWebsocketClient, DeribitWebsocketClient>();
@@ -20,6 +23,7 @@ namespace DeribitApiClient
 
             IHost host = builder.Build();
             host.Run();
+
         }
     }
 }
