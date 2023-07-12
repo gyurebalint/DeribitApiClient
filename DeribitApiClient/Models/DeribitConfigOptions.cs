@@ -1,5 +1,4 @@
-﻿
-namespace DeribitApiClient.Models
+﻿namespace DeribitApiClient.Models
 {
     public class DeribitConfigOptions
     {

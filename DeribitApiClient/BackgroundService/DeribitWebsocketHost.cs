@@ -14,15 +14,13 @@ namespace DeribitApiClient.BackgroundService
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine("Service started...");
-            await _client.RunStreamAsync(cancellationToken);
-
+            await _client.RunStreamAsync();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-
             Console.WriteLine("Service shut down...");
-
+            _client.Dispose();
             return Task.CompletedTask;
         }
     }

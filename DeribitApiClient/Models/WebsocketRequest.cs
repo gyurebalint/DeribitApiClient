@@ -7,8 +7,9 @@ namespace DeribitApiClient.Models
         public string grant_type { get; set; } = "";
         public string client_id { get; set; } = "";
         public string client_secret { get; set; } = "";
+        public List<string> channels { get; set; } = new List<string>();
     }
-    public class AuthenticationRequest
+    public class WebsocketRequest
     {
         public string jsonrpc { get; set; } = "";
         public int id { get; set; } = 0;
@@ -17,17 +18,3 @@ namespace DeribitApiClient.Models
         public Params _params { get; set; }= new Params();
     }
 }
-
-
-/*
- {
-  "jsonrpc" : "2.0",
-  "id" : 9929,
-  "method" : "public/auth",
-  "params" : {
-    "grant_type" : "client_credentials",
-    "client_id" : "fo7WAPRm4P",
-    "client_secret" : "W0H6FJW4IRPZ1MOQ8FP6KMC5RZDUUKXS"
-  }
-}
- */

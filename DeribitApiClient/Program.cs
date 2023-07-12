@@ -8,10 +8,17 @@ namespace DeribitApiClient
 {
     public class Program
     {
+        private static IHost host;
 
-        public void Main(string[] args)
+        static void Main(string[] args)
         {
-            Console.WriteLine("exited gracefully");
+            Console.WriteLine("Press Ctrl+C to exit gracefully.");
+            Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                eventArgs.Cancel = true; // Prevents the application from immediately terminating
+                ShutDownGracefully();
+            };
+
             HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
             builder.Services.AddHostedService<DeribitWebsocketHost>();
             builder.Services.AddSingleton<IDeribitWebsocketClient, DeribitWebsocketClient>();
@@ -19,11 +26,16 @@ namespace DeribitApiClient
             builder.Services.Configure<DeribitConfigOptions>(
                 builder.Configuration.GetSection(DeribitConfigOptions.Name));
 
-
-
-            IHost host = builder.Build();
+            host = builder.Build();
             host.Run();
+        }
 
+        private static void ShutDownGracefully()
+        {
+            host.StopAsync().GetAwaiter().GetResult();
+            host.Dispose();
+            Console.WriteLine("Exited gracefully.");
+            Environment.Exit(0);
         }
     }
 }

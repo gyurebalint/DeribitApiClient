@@ -1,50 +1,50 @@
-﻿
-using DeribitApiClient.Models;
-using Microsoft.Extensions.Configuration;
+﻿using DeribitApiClient.Models;
 using Microsoft.Extensions.Options;
 using System.Net.WebSockets;
 using System.Text;
-using System.Text.Json;
 
 namespace DeribitApiClient.BackgroundService
 {
-    public interface IDeribitWebsocketClient
-    {
-        //This being a POC I think I wil just create a websocket that auth, subscribes then receives messages 
-        //in a using{} scope so the Dispose method is automatic. We ll see if I have time creating a normal api like:
-        //Authenticate(), SendMEssage(), Subscribe(), ReceiveMessages() methods.
-        Task RunStreamAsync(CancellationToken token);
-    }
     public class DeribitWebsocketClient : IDeribitWebsocketClient
     {
         private readonly DeribitConfigOptions _options;
         private const string urlPrefix = "wss://";
         private const string urlSufffix = "/ws/api/v2";
-
+        public CancellationTokenSource cts = new CancellationTokenSource();
 
         public DeribitWebsocketClient(IOptions<DeribitConfigOptions> options)
         {
             _options = options.Value;
         }
 
-        public async Task RunStreamAsync(CancellationToken token)
+        public async Task RunStreamAsync()
         {
             var url = urlPrefix + _options.BaseUrl + urlSufffix;
             var uri = new Uri(url);
 
             using(var ws = new ClientWebSocket())
             {
-                await ws.ConnectAsync(uri, token);
+                await ws.ConnectAsync(uri, cts.Token);
                 Console.WriteLine("Connected to Deribit WebSocket");
 
-                var authMessage = PrepareAuthenticationMessage();
-                await SendMessageOverWebsocket(ws, authMessage, token);
+                var authMessage = CreateRequests.AuthenticationRequest(_options);
+                await SendMessageOverWebsocket(ws, authMessage, cts.Token);
+
+                Console.WriteLine("Subscribe to channels");
+                await SubscribeToChannels(ws, cts.Token);
 
                 Console.WriteLine("User authenticated");
-                await ReceiveMessageOverWebsocket(ws, token);
+                await ReceiveMessageOverWebsocket(ws, cts.Token);
             }
 
         }
+
+        private async Task SubscribeToChannels(ClientWebSocket ws, CancellationToken token)
+        {
+            var message = CreateRequests.SubscribeRequest(_options);
+            await SendMessageOverWebsocket(ws, message, token);
+        }
+
         private async Task ReceiveMessageOverWebsocket(ClientWebSocket ws, CancellationToken token)
         {
             while (ws.State == WebSocketState.Open)
@@ -64,32 +64,10 @@ namespace DeribitApiClient.BackgroundService
             await ws.SendAsync(bytesSegment, WebSocketMessageType.Text, true, token);
         }
 
-        //Should be in some static file
-        private string PrepareAuthenticationMessage()
+        public void Dispose()
         {
-            var authMessage = new AuthenticationRequest()
-            {
-                id = 9929,
-                jsonrpc = "2.0",
-                method = "public/auth",
-                _params = new Params()
-                {
-                    client_id = _options.ClientId,
-                    client_secret = _options.ClientSecret,
-                    grant_type = "client_credentials"
-                }
-            };
-
-            var resultMessage = JsonSerializer.Serialize(authMessage);
-
-            return resultMessage;
+            //This is where I would have disposed of the ClientWebSocket singleton instance, which is not needed now since
+            // we are using a using{} statemtn which is a try,catch,finally block where it automatically disposes the instance
         }
-        async void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
-        {
-            Console.WriteLine("CTRL+C pressed, initiating graceful shutdown...");
-            // TODO Stop the API client here
-            e.Cancel = true;
-        }
-
     }
 }
