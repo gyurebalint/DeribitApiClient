@@ -8,6 +8,5 @@ namespace DeribitApiClient.Models
         public string ClientId { get; set; } = "";
         public string ClientSecret { get; set; } = "";
         public List<string> SubscribeTo { get; set; } = new List<string>();
-
     }
 }

@@ -10,6 +10,7 @@ namespace DeribitApiClient.BackgroundService
         {
             _client = client;
         }
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine("Service started...");
